@@ -1,0 +1,11 @@
+{
+  "name": "Hoop Plays",
+  "short_name": "Hoop Plays",
+  "description": "Mobile basketball playbook builder for drawing, saving, and replaying plays.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#111827",
+  "orientation": "portrait-primary",
+  "icons": []
+}
