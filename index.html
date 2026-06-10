@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Hoop Plays" />
+  <title>Hoop Plays</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Mobile Playbook</p>
+        <h1>Hoop Plays</h1>
+      </div>
+      <button id="helpBtn" class="ghost-btn" type="button">?</button>
+    </header>
+
+    <main>
+      <section class="card play-card">
+        <label for="playName">Play name</label>
+        <div class="name-row">
+          <input id="playName" type="text" placeholder="Example: Princeton Backdoor" autocomplete="off" />
+          <button id="savePlayBtn" type="button">Save</button>
+        </div>
+      </section>
+
+      <section class="court-section">
+        <div class="toolbar card">
+          <button class="mode-btn active" type="button" data-mode="select">Move</button>
+          <button class="mode-btn" type="button" data-mode="cut">Add Cut</button>
+          <button class="mode-btn" type="button" data-mode="pass">Add Pass</button>
+          <button class="mode-btn" type="button" data-mode="screen">Screen</button>
+          <button class="mode-btn" type="button" data-mode="ball">Set Ball</button>
+        </div>
+
+        <div class="court-wrap card">
+          <svg id="court" viewBox="0 0 100 100" role="img" aria-label="Basketball half court play editor">
+            <rect x="2" y="2" width="96" height="96" rx="5" class="court-bg" />
+            <line x1="2" y1="95" x2="98" y2="95" class="court-line" />
+            <line x1="50" y1="95" x2="50" y2="82" class="court-line" />
+            <circle cx="50" cy="84" r="12" class="court-line fill-none" />
+            <rect x="31" y="58" width="38" height="37" class="court-line fill-none" />
+            <rect x="39" y="72" width="22" height="23" class="court-line fill-none" />
+            <path d="M 20 95 Q 50 46 80 95" class="court-line fill-none" />
+            <path d="M 36 58 A 14 14 0 0 0 64 58" class="court-line fill-none" />
+            <circle cx="50" cy="89" r="1.6" class="rim" />
+            <line x1="42" y1="91" x2="58" y2="91" class="court-line" />
+            <g id="pathLayer"></g>
+            <g id="ballLayer"></g>
+            <g id="playerLayer"></g>
+          </svg>
+        </div>
+
+        <div class="action-row">
+          <button id="replayBtn" type="button">Replay</button>
+          <button id="resetReplayBtn" class="secondary" type="button">Reset</button>
+          <button id="clearStepsBtn" class="danger" type="button">Clear Steps</button>
+        </div>
+      </section>
+
+      <section class="grid-two">
+        <div class="card">
+          <div class="section-title-row">
+            <h2>Steps</h2>
+            <span id="selectedInfo" class="pill">Select player</span>
+          </div>
+          <ol id="stepsList" class="steps-list"></ol>
+        </div>
+
+        <div class="card">
+          <div class="section-title-row">
+            <h2>Saved Plays</h2>
+            <button id="newPlayBtn" class="small-btn" type="button">New</button>
+          </div>
+          <select id="savedPlays"></select>
+          <div class="action-row compact">
+            <button id="loadPlayBtn" type="button">Load</button>
+            <button id="deletePlayBtn" class="danger" type="button">Delete</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card pov-card">
+        <div class="section-title-row">
+          <h2>Player POV</h2>
+          <select id="povPlayer">
+            <option value="1">Player 1</option>
+            <option value="2">Player 2</option>
+            <option value="3">Player 3</option>
+            <option value="4">Player 4</option>
+            <option value="5">Player 5</option>
+          </select>
+        </div>
+        <div id="povOutput" class="pov-output"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="helpDialog">
+    <h2>How to use</h2>
+    <p><strong>Move:</strong> drag players into the starting spots.</p>
+    <p><strong>Add Cut:</strong> tap a player, then tap where he goes.</p>
+    <p><strong>Add Pass:</strong> tap passer, then tap receiver.</p>
+    <p><strong>Screen:</strong> tap screener, then tap the screen location.</p>
+    <p><strong>Set Ball:</strong> tap the player who starts with the ball.</p>
+    <p>Save the play, then replay it. Add to iPhone Home Screen for an app-like experience.</p>
+    <button id="closeHelpBtn" type="button">Got it</button>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
