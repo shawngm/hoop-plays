@@ -1,4 +1,7 @@
 const STORAGE_KEY = 'hoopPlays.v1';
+const BACKUP_VERSION = 1;
+const COURT = { minX: 4, maxX: 96, minY: 4, maxY: 70 };
+
 const svg = document.getElementById('court');
 const pathLayer = document.getElementById('pathLayer');
 const playerLayer = document.getElementById('playerLayer');
@@ -9,13 +12,15 @@ const selectedInfo = document.getElementById('selectedInfo');
 const savedPlaysSelect = document.getElementById('savedPlays');
 const povPlayerSelect = document.getElementById('povPlayer');
 const povOutput = document.getElementById('povOutput');
+const backupStatus = document.getElementById('backupStatus');
+const importFileInput = document.getElementById('importFileInput');
 
 const defaultPlayers = {
-  1: { x: 50, y: 76 },
-  2: { x: 24, y: 67 },
-  3: { x: 76, y: 67 },
-  4: { x: 32, y: 43 },
-  5: { x: 50, y: 37 }
+  1: { x: 50, y: 57 },
+  2: { x: 22, y: 52 },
+  3: { x: 78, y: 52 },
+  4: { x: 33, y: 31 },
+  5: { x: 50, y: 26 }
 };
 
 let state = {
@@ -30,9 +35,17 @@ let state = {
 
 let drag = null;
 let replaying = false;
+let backupStatusTimer = null;
 
 function clone(obj) {
   return JSON.parse(JSON.stringify(obj));
+}
+
+function clampPoint(point) {
+  return {
+    x: Math.max(COURT.minX, Math.min(COURT.maxX, point.x)),
+    y: Math.max(COURT.minY, Math.min(COURT.maxY, point.y))
+  };
 }
 
 function courtPoint(evt) {
@@ -40,18 +53,25 @@ function courtPoint(evt) {
   pt.x = evt.clientX;
   pt.y = evt.clientY;
   const screenCTM = svg.getScreenCTM();
-  if (!screenCTM) return { x: 50, y: 50 };
+  if (!screenCTM) return { x: 50, y: 40 };
   const svgPoint = pt.matrixTransform(screenCTM.inverse());
-  return {
-    x: Math.max(4, Math.min(96, svgPoint.x)),
-    y: Math.max(5, Math.min(93, svgPoint.y))
-  };
+  return clampPoint(svgPoint);
 }
 
 function makeSvg(tag, attrs = {}) {
   const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
   Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
   return el;
+}
+
+function setStatus(message, isError = false) {
+  if (!backupStatus) return;
+  backupStatus.textContent = message;
+  backupStatus.style.color = isError ? '#fecaca' : '#bbf7d0';
+  clearTimeout(backupStatusTimer);
+  backupStatusTimer = setTimeout(() => {
+    backupStatus.textContent = '';
+  }, 4500);
 }
 
 function setMode(mode) {
@@ -91,7 +111,7 @@ function renderPlayers() {
   playerLayer.innerHTML = '';
   Object.entries(state.players).forEach(([num, pos]) => {
     const group = makeSvg('g', { class: `player ${state.selectedPlayer === num ? 'selected' : ''}`, 'data-player': num });
-    group.appendChild(makeSvg('circle', { cx: pos.x, cy: pos.y, r: 4.8 }));
+    group.appendChild(makeSvg('circle', { cx: pos.x, cy: pos.y, r: 4.3 }));
     const text = makeSvg('text', { x: pos.x, y: pos.y + .1 });
     text.textContent = num;
     group.appendChild(text);
@@ -105,7 +125,7 @@ function renderBall() {
   ballLayer.innerHTML = '';
   const pos = state.players[state.ball];
   if (!pos) return;
-  const ball = makeSvg('circle', { class: 'ball', cx: pos.x + 5.1, cy: pos.y - 4.4, r: 2.15 });
+  const ball = makeSvg('circle', { class: 'ball', cx: pos.x + 4.6, cy: pos.y - 3.9, r: 1.95 });
   ballLayer.appendChild(ball);
 }
 
@@ -117,7 +137,7 @@ function renderPaths() {
         class: 'path',
         d: `M ${step.from.x} ${step.from.y} L ${step.to.x} ${step.to.y}`
       }));
-      pathLayer.appendChild(makeSvg('circle', { class: 'step-dot', cx: step.to.x, cy: step.to.y, r: 1.35 }));
+      pathLayer.appendChild(makeSvg('circle', { class: 'step-dot', cx: step.to.x, cy: step.to.y, r: 1.15 }));
     }
     if (step.type === 'pass') {
       const from = state.players[step.fromPlayer] || step.from;
@@ -132,10 +152,10 @@ function renderPaths() {
         class: 'path',
         d: `M ${step.from.x} ${step.from.y} L ${step.to.x} ${step.to.y}`
       }));
-      pathLayer.appendChild(makeSvg('line', { class: 'screen-mark', x1: step.to.x - 3, y1: step.to.y - 3, x2: step.to.x + 3, y2: step.to.y + 3 }));
-      pathLayer.appendChild(makeSvg('line', { class: 'screen-mark', x1: step.to.x + 3, y1: step.to.y - 3, x2: step.to.x - 3, y2: step.to.y + 3 }));
+      pathLayer.appendChild(makeSvg('line', { class: 'screen-mark', x1: step.to.x - 2.6, y1: step.to.y - 2.6, x2: step.to.x + 2.6, y2: step.to.y + 2.6 }));
+      pathLayer.appendChild(makeSvg('line', { class: 'screen-mark', x1: step.to.x + 2.6, y1: step.to.y - 2.6, x2: step.to.x - 2.6, y2: step.to.y + 2.6 }));
     }
-    const dot = makeSvg('text', { x: step.labelX || 6, y: step.labelY || 8 + index * 4, fill: '#111827', 'font-size': '3.4', 'font-weight': '900' });
+    const dot = makeSvg('text', { x: step.labelX || 6, y: step.labelY || 8 + index * 4, fill: '#111827', 'font-size': '3.1', 'font-weight': '900' });
     dot.textContent = index + 1;
     pathLayer.appendChild(dot);
   });
@@ -221,10 +241,10 @@ svg.addEventListener('pointermove', evt => {
   const now = courtPoint(evt);
   const dx = now.x - drag.start.x;
   const dy = now.y - drag.start.y;
-  state.players[drag.player] = {
-    x: Math.max(5, Math.min(95, drag.original.x + dx)),
-    y: Math.max(5, Math.min(92, drag.original.y + dy))
-  };
+  state.players[drag.player] = clampPoint({
+    x: drag.original.x + dx,
+    y: drag.original.y + dy
+  });
   render();
 });
 
@@ -280,23 +300,34 @@ function setStoredPlays(plays) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(plays));
 }
 
+function normalizePlay(play) {
+  return {
+    id: play.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+    name: play.name || 'Imported Play',
+    ball: String(play.ball || '1'),
+    players: play.players || clone(defaultPlayers),
+    steps: Array.isArray(play.steps) ? play.steps : [],
+    updatedAt: play.updatedAt || new Date().toISOString()
+  };
+}
+
 function savePlay() {
   const name = playNameInput.value.trim() || `Untitled Play ${new Date().toLocaleDateString()}`;
   state.name = name;
   const plays = getStoredPlays();
-  const playData = {
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+  const playData = normalizePlay({
     name,
     ball: state.ball,
     players: clone(state.players),
     steps: clone(state.steps),
     updatedAt: new Date().toISOString()
-  };
+  });
   const existingIndex = plays.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
   if (existingIndex >= 0) plays[existingIndex] = { ...plays[existingIndex], ...playData, id: plays[existingIndex].id };
   else plays.push(playData);
   setStoredPlays(plays);
   renderSavedPlays(name);
+  setStatus(`Saved "${name}".`);
 }
 
 function renderSavedPlays(selectedName = savedPlaysSelect.value) {
@@ -340,9 +371,11 @@ function loadPlay() {
 function deletePlay() {
   const id = savedPlaysSelect.value;
   if (!id) return;
+  const play = getStoredPlays().find(p => p.id === id);
   const plays = getStoredPlays().filter(p => p.id !== id);
   setStoredPlays(plays);
   render();
+  if (play) setStatus(`Deleted "${play.name}".`);
 }
 
 function newPlay() {
@@ -372,6 +405,79 @@ function resetReplay() {
     state.ball = play.ball;
   }
   render();
+}
+
+function exportPlays() {
+  const plays = getStoredPlays();
+  if (!plays.length) {
+    setStatus('No saved plays to export yet.', true);
+    return;
+  }
+  const backup = {
+    app: 'Hoop Plays',
+    version: BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    plays
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const date = new Date().toISOString().slice(0, 10);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `hoop-plays-backup-${date}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  setStatus(`Exported ${plays.length} play${plays.length === 1 ? '' : 's'} as a backup file.`);
+}
+
+function importPlaysFromText(text) {
+  const parsed = JSON.parse(text);
+  const incoming = Array.isArray(parsed) ? parsed : parsed.plays;
+  if (!Array.isArray(incoming)) throw new Error('Backup file does not contain a plays list.');
+
+  const current = getStoredPlays();
+  const byName = new Map(current.map(play => [play.name.toLowerCase(), play]));
+  let added = 0;
+  let updated = 0;
+
+  incoming.map(normalizePlay).forEach(play => {
+    const key = play.name.toLowerCase();
+    if (byName.has(key)) {
+      const existing = byName.get(key);
+      byName.set(key, { ...existing, ...play, id: existing.id });
+      updated += 1;
+    } else {
+      byName.set(key, play);
+      added += 1;
+    }
+  });
+
+  const merged = Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+  setStoredPlays(merged);
+  render();
+  setStatus(`Imported ${added} new and updated ${updated} existing play${added + updated === 1 ? '' : 's'}.`);
+}
+
+function handleImportFile(evt) {
+  const file = evt.target.files && evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      importPlaysFromText(String(reader.result || ''));
+    } catch (error) {
+      setStatus(`Import failed: ${error.message}`, true);
+    } finally {
+      importFileInput.value = '';
+    }
+  };
+  reader.onerror = () => {
+    setStatus('Import failed: could not read that file.', true);
+    importFileInput.value = '';
+  };
+  reader.readAsText(file);
 }
 
 function animateMove(player, to, duration = 650) {
@@ -454,6 +560,9 @@ document.getElementById('newPlayBtn').addEventListener('click', newPlay);
 document.getElementById('clearStepsBtn').addEventListener('click', clearSteps);
 document.getElementById('replayBtn').addEventListener('click', replay);
 document.getElementById('resetReplayBtn').addEventListener('click', resetReplay);
+document.getElementById('exportPlaysBtn').addEventListener('click', exportPlays);
+document.getElementById('importPlaysBtn').addEventListener('click', () => importFileInput.click());
+importFileInput.addEventListener('change', handleImportFile);
 povPlayerSelect.addEventListener('change', renderPov);
 
 document.getElementById('helpBtn').addEventListener('click', () => document.getElementById('helpDialog').showModal());
