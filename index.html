@@ -40,17 +40,18 @@
         </div>
 
         <div class="court-wrap card">
-          <svg id="court" viewBox="0 0 100 100" role="img" aria-label="Basketball half court play editor">
-            <rect x="2" y="2" width="96" height="96" rx="5" class="court-bg" />
-            <line x1="2" y1="95" x2="98" y2="95" class="court-line" />
-            <line x1="50" y1="95" x2="50" y2="82" class="court-line" />
-            <circle cx="50" cy="84" r="12" class="court-line fill-none" />
-            <rect x="31" y="58" width="38" height="37" class="court-line fill-none" />
-            <rect x="39" y="72" width="22" height="23" class="court-line fill-none" />
-            <path d="M 20 95 Q 50 46 80 95" class="court-line fill-none" />
-            <path d="M 36 58 A 14 14 0 0 0 64 58" class="court-line fill-none" />
-            <circle cx="50" cy="89" r="1.6" class="rim" />
-            <line x1="42" y1="91" x2="58" y2="91" class="court-line" />
+          <svg id="court" viewBox="0 0 100 74" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Basketball half court play editor">
+            <rect x="2" y="2" width="96" height="70" rx="5" class="court-bg" />
+            <line x1="2" y1="70" x2="98" y2="70" class="court-line" />
+            <line x1="50" y1="70" x2="50" y2="61.5" class="court-line" />
+            <circle cx="50" cy="63.5" r="1.8" class="rim" />
+            <line x1="42" y1="66" x2="58" y2="66" class="court-line" />
+            <rect x="32" y="39" width="36" height="31" class="court-line fill-none" />
+            <rect x="39" y="52" width="22" height="18" class="court-line fill-none" />
+            <path d="M 38 39 A 12 12 0 0 0 62 39" class="court-line fill-none" />
+            <path d="M 38 39 A 12 12 0 0 1 62 39" class="court-line fill-none soft-line" />
+            <path d="M 8 70 L 8 57 A 42 42 0 0 1 92 57 L 92 70" class="court-line fill-none" />
+            <line x1="2" y1="70" x2="98" y2="70" class="court-line" />
             <g id="pathLayer"></g>
             <g id="ballLayer"></g>
             <g id="playerLayer"></g>
@@ -83,6 +84,15 @@
             <button id="loadPlayBtn" type="button">Load</button>
             <button id="deletePlayBtn" class="danger" type="button">Delete</button>
           </div>
+          <div class="backup-panel">
+            <p class="backup-note">Back up your plays before clearing cache or switching devices.</p>
+            <div class="action-row compact">
+              <button id="exportPlaysBtn" class="secondary" type="button">Export File</button>
+              <button id="importPlaysBtn" class="secondary" type="button">Import File</button>
+            </div>
+            <input id="importFileInput" class="visually-hidden" type="file" accept=".txt,.json,application/json,text/plain" />
+            <p id="backupStatus" class="backup-status" aria-live="polite"></p>
+          </div>
         </div>
       </section>
 
@@ -109,6 +119,8 @@
     <p><strong>Add Pass:</strong> tap passer, then tap receiver.</p>
     <p><strong>Screen:</strong> tap screener, then tap the screen location.</p>
     <p><strong>Set Ball:</strong> tap the player who starts with the ball.</p>
+    <p><strong>Export File:</strong> downloads a backup text file of saved plays.</p>
+    <p><strong>Import File:</strong> restores plays from a previous backup file.</p>
     <p>Save the play, then replay it. Add to iPhone Home Screen for an app-like experience.</p>
     <button id="closeHelpBtn" type="button">Got it</button>
   </dialog>
